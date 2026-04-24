@@ -19,7 +19,7 @@ const generatedTemplates = {
     'Chuyện là thế này:\n\n{topic}.\n\n{opinion}\n\nTùng biết sẽ có người không đồng ý. Nhưng mà... kệ. Sự thật không cần ai đồng ý để tồn tại. 🤷\n\n#PostThủCủaTùng'
   ],
   long: [
-    '📝 {topic}\n\n— Một bài viết của Tùng, viết trong trạng thái tỉnh táo bất thường —\n\nMở bài:\nCó những thứ ai cũng biết nhưng không ai nói. Giống như biết quán đó dở mà vẫn rủ bạn đi. Giống như biết sếp nói sai mà vẫn gật đầu.\n\n"{topic}" — đây là một trong những thứ đó.\n\nThân bài:\n{opinion}\n\nBối cảnh thì sao? {context}\n\nNhìn rộng ra, đây không chỉ là chuyện cá nhân. Đây là chuyện của cả một thế hệ đang cố sống "đúng" theo tiêu chuẩn của người khác, trong khi bản thân còn chưa biết "đúng" là gì.\n\nKết bài:\nTùng không có lời khuyên. Vì lời khuyên miễn phí thì giá trị cũng... miễn phí.\n\nNhưng nếu bài này khiến bạn dừng lại suy nghĩ 3 giây — thì đủ rồi.\n\n3 giây thôi. Rồi lướt tiếp. 🖊️\n\n#PostThủCủaTùng #ViếtDàiĐọcHếtThìGiỏi'
+    '📝 {topic}\n\n— Một bài viết của Tùng, viết trong trạng thái tỉnh táo bất thường —\n\nCó những thứ ai cũng biết nhưng không ai nói. Giống như biết quán đó dở mà vẫn rủ bạn đi. Giống như biết sếp nói sai mà vẫn gật đầu.\n\n"{topic}" — đây là một trong những thứ đó.\n\n{opinion}\n\nBối cảnh thì sao? {context}\n\nNhìn rộng ra, đây không chỉ là chuyện cá nhân. Đây là chuyện của cả một thế hệ đang cố sống "đúng" theo tiêu chuẩn của người khác, trong khi bản thân còn chưa biết "đúng" là gì.\n\nTùng không có lời khuyên. Vì lời khuyên miễn phí thì giá trị cũng... miễn phí.\n\nNhưng nếu bài này khiến bạn dừng lại suy nghĩ 3 giây — thì đủ rồi.\n\n3 giây thôi. Rồi lướt tiếp. 🖊️\n\n#PostThủCủaTùng #ViếtDàiĐọcHếtThìGiỏi'
   ],
   caption: [
     '"{topic}" — viết bởi một người đã quá mệt để giả vờ lịch sự.\n\nFull bài 👆 Đọc xong share cho người cần nghe.\n\n#PostThủCủaTùng #GócSuyNgẫm #ChâmChọcNhẹThôi',
@@ -29,6 +29,20 @@ const generatedTemplates = {
     '🔀 Biến thể 1 — Giọng nhẹ nhàng hơn:\n\n{topic} — chuyện này ai cũng trải qua, nhưng ít ai nói ra. Hôm nay Tùng nói hộ.\n\n{opinion}\n\nKhông phán xét. Chỉ chia sẻ thôi. ☕\n\n---\n\n🔀 Biến thể 2 — Giọng gắt hơn:\n\n{topic}?! Thôi đi. Ai cũng biết sự thật rồi mà cứ giả vờ ngạc nhiên.\n\n{opinion}\n\nTùng nói thẳng: nếu bạn đang làm điều ngược lại — thì xin lỗi, bạn đang tự lừa mình. 🔥\n\n---\n\n🔀 Biến thể 3 — Giọng hài hước:\n\n{topic} — nghe giống tiêu đề báo mạng đúng không? Nhưng lần này là thật.\n\n{opinion}\n\nCười đi. Rồi khóc. Rồi share. Tùng cho phép. 😂'
   ]
 };
+
+// ===== IMAGE PROMPT STYLES =====
+const imagePromptStyles = [
+  { id: 'realistic', name: '📸 Ảnh thực tế', desc: 'Phong cách chụp ảnh chuyên nghiệp', prefix: 'A professional photograph, realistic style, high quality, cinematic lighting,' },
+  { id: 'illustration', name: '🎨 Minh họa', desc: 'Tranh minh họa digital art', prefix: 'A beautiful digital illustration, vibrant colors, detailed artwork,' },
+  { id: 'cartoon', name: '🖍️ Hoạt hình', desc: 'Phong cách hoạt hình vui nhộn', prefix: 'A fun cartoon style illustration, colorful, playful, expressive characters,' },
+  { id: 'minimal', name: '⚪ Tối giản', desc: 'Thiết kế tối giản, clean', prefix: 'A minimalist design, clean lines, simple composition, modern aesthetic,' },
+  { id: 'watercolor', name: '💧 Màu nước', desc: 'Tranh màu nước nghệ thuật', prefix: 'A beautiful watercolor painting, soft colors, artistic brush strokes, dreamy atmosphere,' },
+  { id: 'poster', name: '🪧 Poster', desc: 'Thiết kế poster bắt mắt', prefix: 'A bold eye-catching poster design, strong typography, graphic design style, vibrant layout,' },
+  { id: '3d', name: '🧊 3D', desc: 'Đồ họa 3D hiện đại', prefix: 'A 3D rendered scene, modern CGI, soft lighting, clay render style, isometric view,' },
+  { id: 'anime', name: '🌸 Anime', desc: 'Phong cách anime Nhật Bản', prefix: 'An anime-style illustration, Japanese animation aesthetic, detailed, expressive,' }
+];
+
+let selectedImageStyle = 'realistic';
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -174,6 +188,7 @@ function handleGenerate() {
 
     state.generatedOutput = output;
     renderOutput();
+    generateImagePrompt();
 
     btn.classList.remove('loading');
     validateForm();
@@ -182,6 +197,66 @@ function handleGenerate() {
     // Scroll to output
     document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 2500);
+}
+
+// ===== IMAGE PROMPT GENERATOR =====
+function generateImagePrompt() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) return;
+  
+  const style = imagePromptStyles.find(s => s.id === selectedImageStyle) || imagePromptStyles[0];
+  
+  const promptTemplates = [
+    `${style.prefix} depicting the concept of "${topic}" in Vietnamese daily life context. The scene should evoke emotion and tell a story. No text overlay.`,
+    `${style.prefix} visual metaphor representing "${topic}". The image should be thought-provoking, suitable for a Vietnamese social media post. No text in image.`,
+    `${style.prefix} creative scene inspired by the theme "${topic}". Show human emotion and connection, Vietnamese cultural context. No words or text.`
+  ];
+  
+  const prompt = promptTemplates[Math.floor(Math.random() * promptTemplates.length)];
+  
+  const container = document.getElementById('imagePromptContainer');
+  container.innerHTML = `
+    <div class="image-prompt-result">
+      <div class="image-prompt-header">
+        <h4>🎨 Prompt tạo ảnh cho Gemini</h4>
+        <p class="image-prompt-hint">Copy prompt bên dưới → Dán vào <a href="https://gemini.google.com" target="_blank">Gemini</a> để tạo ảnh minh họa</p>
+      </div>
+      <div class="image-style-picker">
+        ${imagePromptStyles.map(s => `
+          <button class="image-style-btn ${s.id === selectedImageStyle ? 'active' : ''}" 
+                  onclick="selectImageStyle('${s.id}')" title="${s.desc}">
+            ${s.name}
+          </button>
+        `).join('')}
+      </div>
+      <div class="image-prompt-text" id="imagePromptText">${prompt}</div>
+      <div class="image-prompt-actions">
+        <button class="btn-action btn-copy" onclick="copyImagePrompt()">📋 Copy Prompt</button>
+        <button class="btn-action btn-regen" onclick="generateImagePrompt()">🔄 Tạo prompt khác</button>
+      </div>
+    </div>
+  `;
+}
+
+function selectImageStyle(styleId) {
+  selectedImageStyle = styleId;
+  generateImagePrompt();
+}
+
+function copyImagePrompt() {
+  const text = document.getElementById('imagePromptText');
+  if (!text) return;
+  navigator.clipboard.writeText(text.textContent).then(() => {
+    showToast('Đã copy prompt tạo ảnh! Dán vào Gemini để tạo ảnh. 🎨', 'success');
+  }).catch(() => {
+    const range = document.createRange();
+    range.selectNode(text);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    showToast('Đã copy prompt! 🎨', 'success');
+  });
 }
 
 // ===== RENDER OUTPUT =====

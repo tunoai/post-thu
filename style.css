@@ -776,4 +776,119 @@ body {
   .tone-selector { flex-wrap: wrap; }
   .output-tab { font-size: 0.78rem; padding: 10px 12px; }
   .style-selector { grid-template-columns: 1fr; }
+  .image-style-picker { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== IMAGE PROMPT SECTION ===== */
+.image-prompt-section {
+  margin-top: 2.5rem;
+}
+
+.image-prompt-card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.image-prompt-placeholder {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--gray);
+}
+
+.image-prompt-placeholder .placeholder-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.image-prompt-result {
+  animation: fadeIn 0.4s ease;
+}
+
+.image-prompt-header h4 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: var(--black);
+}
+
+.image-prompt-hint {
+  font-size: 0.85rem;
+  color: var(--gray);
+  margin-bottom: 1rem;
+}
+
+.image-prompt-hint a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.image-style-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.image-style-btn {
+  padding: 8px 6px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--cream);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.image-style-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.image-style-btn.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.image-prompt-text {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #e0e0e0;
+  padding: 1.2rem;
+  border-radius: var(--radius-sm);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  border: 2px solid #2a2a4a;
+  word-break: break-word;
+  position: relative;
+}
+
+.image-prompt-text::before {
+  content: "PROMPT";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-main);
+  letter-spacing: 1px;
+}
+
+.image-prompt-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
