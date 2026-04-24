@@ -257,19 +257,33 @@ function changeTone() {
 }
 
 // ===== SAVE DRAFT =====
-function saveDraft() {
+async function saveDraft() {
   if (!state.generatedOutput) return;
-  const drafts = JSON.parse(localStorage.getItem('postthu_drafts') || '[]');
-  drafts.push({
-    id: Date.now(),
-    type: state.selectedType,
-    tone: state.selectedTone,
+  
+  const draftData = {
+    type: state.selectedType || '',
+    tone: state.selectedTone || '',
     output: state.generatedOutput,
-    createdAt: new Date().toLocaleString('vi-VN'),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     topic: document.getElementById('topicInput').value.trim()
-  });
-  localStorage.setItem('postthu_drafts', JSON.stringify(drafts));
-  showToast('Đã lưu nháp thành công! 💾', 'success');
+  };
+
+  try {
+    // Lưu lên đám mây (Firebase)
+    await db.collection("drafts").add(draftData);
+    showToast('Đã lưu nháp lên Firebase thành công! ☁️💾', 'success');
+  } catch (error) {
+    console.error("Lỗi khi lưu Firebase:", error);
+    // Nếu rớt mạng thì lưu tạm vào localStorage
+    const drafts = JSON.parse(localStorage.getItem('postthu_drafts') || '[]');
+    drafts.push({
+      ...draftData,
+      id: Date.now(),
+      createdAt: new Date().toLocaleString('vi-VN')
+    });
+    localStorage.setItem('postthu_drafts', JSON.stringify(drafts));
+    showToast('Mạng kém! Đã lưu tạm vào máy. 💾', 'info');
+  }
 }
 
 // ===== RESET FORM =====
