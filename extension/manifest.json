@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Post Thủ Catcher",
+  "version": "1.0",
+  "description": "Bắt ngay các đoạn text, bài viết viral trên Facebook và đưa thẳng vào Web App Post Thủ.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Bắt Trend vào Post Thủ"
+  }
+}

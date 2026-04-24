@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Post Thủ của Tùng - Công cụ hỗ trợ viết bài vlog, TikTok vlog và Facebook post với giọng điệu cá nhân, châm chọc, hóm hỉnh.">
+  <title>Post Thủ của Tùng — Biến ý tưởng thành bài viết có mùi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <a href="#" class="header-logo">
+      <span class="logo-icon">🖊️</span>
+      Post Thủ của Tùng
+    </a>
+    <nav class="header-nav" id="mainNav">
+      <a href="#" class="active">Trang chủ</a>
+      <a href="#trend">🔥 Bắt Trend</a>
+      <a href="#input">Viết bài</a>
+      <a href="#output">Lưu trữ</a>
+    </nav>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
+    <a href="#input" class="btn-cta">✍️ Viết ngay</a>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-shapes">
+      <div class="hero-shape circle"></div>
+      <div class="hero-shape square"></div>
+      <div class="hero-shape triangle"></div>
+      <div class="hero-shape dot-grid"></div>
+    </div>
+    <div class="hero-content">
+      <h1>Biến ý tưởng đời thường<br>thành bài viết <span class="highlight">có mùi Tùng.</span></h1>
+      <p class="hero-sub">Công cụ hỗ trợ viết bài vlog, TikTok vlog và Facebook post ngắn dài với giọng điệu cá nhân, châm chọc, hóm hỉnh.</p>
+      <div class="hero-actions">
+        <a href="#input" class="btn-primary">✍️ Tạo bài viết</a>
+        <a href="#trend" class="btn-secondary">🔥 Khám phá Trend</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- 1. Content Type Selector -->
+    <section class="content-type-section" id="contentType">
+      <h2 class="section-title"><span class="icon">📝</span> Chọn loại nội dung</h2>
+      <div class="type-grid">
+        <div class="type-card" data-type="vlog" onclick="selectType(this)">
+          <div class="type-icon">🎬</div>
+          <div class="type-name">Bài Vlog</div>
+          <div class="type-desc">Script video dài, kể chuyện sâu</div>
+        </div>
+        <div class="type-card" data-type="tiktok" onclick="selectType(this)">
+          <div class="type-icon">📱</div>
+          <div class="type-name">TikTok Vlog</div>
+          <div class="type-desc">Video ngắn, hook mạnh, trend</div>
+        </div>
+        <div class="type-card" data-type="fb-short" onclick="selectType(this)">
+          <div class="type-icon">💬</div>
+          <div class="type-name">Facebook Ngắn</div>
+          <div class="type-desc">Post ngắn, viral, dễ share</div>
+        </div>
+        <div class="type-card" data-type="fb-long" onclick="selectType(this)">
+          <div class="type-icon">📄</div>
+          <div class="type-name">Facebook Dài</div>
+          <div class="type-desc">Bài dài, phân tích, kể chuyện</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Input Section -->
+    <section class="input-section" id="input">
+      <h2 class="section-title"><span class="icon">💡</span> Nhập ý tưởng của bạn</h2>
+      <div class="input-card">
+        <div class="form-group">
+          <label>Chủ đề <span class="required">*</span></label>
+          <input type="text" class="form-input" id="topicInput" placeholder="VD: Tại sao Gen Z thích nghỉ việc hơn là chịu đựng?">
+        </div>
+        <div class="form-group">
+          <label>Bối cảnh</label>
+          <textarea class="form-textarea" id="contextInput" placeholder="Mô tả tình huống, câu chuyện, hoặc góc nhìn cụ thể..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Quan điểm chính <span class="required">*</span></label>
+          <textarea class="form-textarea" id="opinionInput" rows="3" placeholder="Bạn muốn nói gì? Góc nhìn chính của bạn là gì?"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Mức độ châm chọc</label>
+          <div class="tone-selector">
+            <button class="tone-btn" data-tone="light" onclick="selectTone(this)">😏 Nhẹ</button>
+            <button class="tone-btn selected" data-tone="medium" onclick="selectTone(this)">😈 Vừa</button>
+            <button class="tone-btn" data-tone="heavy" onclick="selectTone(this)">🔥 Gắt</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>🎨 Phong cách viết <span class="required">*</span></label>
+          <p class="form-hint">Chọn giọng văn của tác giả bạn muốn học theo</p>
+          <div class="style-selector" id="styleSelector">
+            <!-- Rendered by JS from writing-styles.js -->
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-generate" id="generateBtn" disabled onclick="handleGenerate()">
+            <span class="btn-text">✨ Tạo bài viết</span>
+            <span class="btn-loader"><span class="spinner"></span> Đang viết...</span>
+          </button>
+          <button class="btn-reset" onclick="resetForm()">🔄 Làm mới</button>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- TREND SECTION -->
+    <section class="trend-section" id="trend">
+      <h2 class="section-title"><span class="icon">🔥</span> Bắt Trend</h2>
+      <div class="trend-card">
+        <div class="trend-search-wrapper">
+          <div class="trend-search">
+            <input type="text" id="trendKeyword" class="form-input" placeholder="Nhập sự kiện hoặc từ khóa (VD: kinh doanh, drama...)">
+            <button class="btn-primary" id="btnSearchTrend" onclick="searchTrend()">
+              <span class="btn-text">🔍 Tìm Trend</span>
+              <span class="btn-loader" style="display: none;"><span class="spinner"></span> Đang cào...</span>
+            </button>
+          </div>
+          <div class="trend-suggestions" id="trendSuggestions">
+            <!-- Random suggestions rendered by JS -->
+          </div>
+        </div>
+        <div class="trend-results" id="trendResults">
+          <div class="trend-placeholder">Nhập từ khóa và bấm tìm kiếm để cào top 3 video TikTok viral nhất hiện nay.<br>(Quá trình này mất khoảng 15-30 giây)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Output Section -->
+    <section class="output-section" id="output">
+      <h2 class="section-title"><span class="icon">🎯</span> Kết quả</h2>
+      <div class="output-card">
+        <div class="output-tabs">
+          <button class="output-tab active" data-tab="hook" onclick="switchTab(this)">🪝 Hook</button>
+          <button class="output-tab" data-tab="short" onclick="switchTab(this)">📝 Bản ngắn</button>
+          <button class="output-tab" data-tab="long" onclick="switchTab(this)">📄 Bản dài</button>
+          <button class="output-tab" data-tab="caption" onclick="switchTab(this)">💬 Caption</button>
+          <button class="output-tab" data-tab="variant" onclick="switchTab(this)">🔀 Biến thể</button>
+        </div>
+        <div class="output-body" id="outputBody">
+          <div class="output-placeholder" id="outputPlaceholder">
+            <div class="placeholder-icon">✍️</div>
+            <p>Chọn loại nội dung, nhập ý tưởng rồi bấm "Tạo bài viết"<br>Tùng sẽ viết cho bạn ngay!</p>
+          </div>
+          <div class="output-content" id="outputContent-hook" data-tab="hook">
+            <div class="output-text" id="outputText-hook"></div>
+            <div class="output-actions">
+              <button class="btn-action btn-copy" onclick="copyText('hook')">📋 Copy</button>
+              <button class="btn-action btn-regen" onclick="regenerate()">🔄 Tạo lại</button>
+              <button class="btn-action btn-tone" onclick="changeTone()">🎭 Chỉnh giọng</button>
+              <button class="btn-action btn-save" onclick="saveDraft()">💾 Lưu nháp</button>
+            </div>
+          </div>
+          <div class="output-content" id="outputContent-short" data-tab="short">
+            <div class="output-text" id="outputText-short"></div>
+            <div class="output-actions">
+              <button class="btn-action btn-copy" onclick="copyText('short')">📋 Copy</button>
+              <button class="btn-action btn-regen" onclick="regenerate()">🔄 Tạo lại</button>
+              <button class="btn-action btn-tone" onclick="changeTone()">🎭 Chỉnh giọng</button>
+              <button class="btn-action btn-save" onclick="saveDraft()">💾 Lưu nháp</button>
+            </div>
+          </div>
+          <div class="output-content" id="outputContent-long" data-tab="long">
+            <div class="output-text" id="outputText-long"></div>
+            <div class="output-actions">
+              <button class="btn-action btn-copy" onclick="copyText('long')">📋 Copy</button>
+              <button class="btn-action btn-regen" onclick="regenerate()">🔄 Tạo lại</button>
+              <button class="btn-action btn-tone" onclick="changeTone()">🎭 Chỉnh giọng</button>
+              <button class="btn-action btn-save" onclick="saveDraft()">💾 Lưu nháp</button>
+            </div>
+          </div>
+          <div class="output-content" id="outputContent-caption" data-tab="caption">
+            <div class="output-text" id="outputText-caption"></div>
+            <div class="output-actions">
+              <button class="btn-action btn-copy" onclick="copyText('caption')">📋 Copy</button>
+              <button class="btn-action btn-regen" onclick="regenerate()">🔄 Tạo lại</button>
+              <button class="btn-action btn-tone" onclick="changeTone()">🎭 Chỉnh giọng</button>
+              <button class="btn-action btn-save" onclick="saveDraft()">💾 Lưu nháp</button>
+            </div>
+          </div>
+          <div class="output-content" id="outputContent-variant" data-tab="variant">
+            <div class="output-text" id="outputText-variant"></div>
+            <div class="output-actions">
+              <button class="btn-action btn-copy" onclick="copyText('variant')">📋 Copy</button>
+              <button class="btn-action btn-regen" onclick="regenerate()">🔄 Tạo lại</button>
+              <button class="btn-action btn-tone" onclick="changeTone()">🎭 Chỉnh giọng</button>
+              <button class="btn-action btn-save" onclick="saveDraft()">💾 Lưu nháp</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>🖊️ Post Thủ của Tùng</h3>
+        <p>Công cụ viết bài cá nhân với giọng điệu sắc sảo, châm chọc và hóm hỉnh. Từ ý tưởng đời thường đến bài viết gây nghiện — tất cả đều có mùi Tùng.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-icon" title="Facebook">📘</a>
+          <a href="#" class="social-icon" title="TikTok">🎵</a>
+          <a href="#" class="social-icon" title="YouTube">▶️</a>
+          <a href="#" class="social-icon" title="Instagram">📷</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Liên kết</h4>
+        <a href="#">Trang chủ</a>
+        <a href="#trend">Bắt trend</a>
+        <a href="#input">Viết bài mới</a>
+        <a href="#">Hướng dẫn sử dụng</a>
+        <a href="#">Chính sách bảo mật</a>
+      </div>
+      <div class="footer-contact">
+        <h4>Liên hệ</h4>
+        <p>📧 tung@postthu.vn</p>
+        <p>📱 0901 234 567</p>
+        <p>📍 Sài Gòn, Việt Nam</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Post Thủ của Tùng. Viết gì cũng phải có mùi. 🖊️</p>
+    </div>
+  </footer>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Xem mẫu</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="writing-styles.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Post Thủ Catcher</title>
+  <style>
+    body {
+      width: 350px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px;
+      margin: 0;
+      background: #FFF7ED;
+      color: #1C1917;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #EA580C;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border: 2px solid #1C1917;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 13px;
+      resize: none;
+      margin-bottom: 15px;
+      background: #fff;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #F97316;
+      color: #fff;
+      border: 2px solid #1C1917;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 #1C1917;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: #EA580C;
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #1C1917;
+    }
+    .hint {
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 10px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔥 Bắt Trend vào Post Thủ</h2>
+  <span class="hint">Bôi đen đoạn chữ trên Facebook, hoặc Tiện ích sẽ tự động cào bài viết bạn đang xem.</span>
+  <textarea id="capturedText" placeholder="Nội dung bắt được sẽ hiện ở đây... Bạn có thể chỉnh sửa trước khi gửi."></textarea>
+  <button id="sendBtn">🚀 Gửi vào Web App</button>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
