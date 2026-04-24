@@ -36,23 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTrendSuggestions();
   setupFormValidation();
   setupMobileMenu();
-
-  // Check URL for extension payload
-  const urlParams = new URLSearchParams(window.location.search);
-  const trendTopic = urlParams.get('trend_topic');
-  if (trendTopic) {
-    // Focus the input, scroll to it, and fill the text
-    const topicInput = document.getElementById('topicInput');
-    if (topicInput) {
-      topicInput.value = trendTopic;
-      document.getElementById('input').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      validateForm();
-      
-      // Clean up the URL so it looks nice
-      window.history.replaceState({}, document.title, window.location.pathname);
-      showToast('Đã nhận trend từ Tiện ích mở rộng! ✨', 'success');
-    }
-  }
 });
 
 // ===== WRITING STYLE SELECTOR =====
