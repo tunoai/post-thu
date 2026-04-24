@@ -303,35 +303,6 @@ function resetForm() {
   showToast('Đã làm mới form! 🔄', 'info');
 }
 
-  `;
-  document.getElementById('modalOverlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-// ===== USE STYLE =====
-function useStyle(id) {
-  const sample = sampleData.find(s => s.id === id);
-  if (!sample) return;
-
-  // Auto-select type
-  document.querySelectorAll('.type-card').forEach(c => {
-    if (c.dataset.type === sample.type) {
-      c.classList.add('selected');
-      state.selectedType = sample.type;
-    } else {
-      c.classList.remove('selected');
-    }
-  });
-
-  // Check sample checkbox
-  document.getElementById('useSampleStyle').checked = true;
-
-  // Scroll to input
-  document.getElementById('input').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  showToast(`Đã chọn style "${sample.tag}"! Nhập ý tưởng và bấm Tạo bài viết. ✨`, 'success');
-  validateForm();
-}
 
 // ===== CLOSE MODAL =====
 function closeModal(event) {
