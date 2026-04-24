@@ -427,6 +427,20 @@ document.addEventListener('keydown', (e) => {
 // ===== BẮT TREND =====
 const APIFY_TOKEN = ['apify', 'api', 'mIs3EPzFSuEy59muJh9xRh79bmXyFV2V1oyV'].join('_');
 
+// Các kênh tin tức/drama lớn ưu tiên
+const TOP_CHANNELS = [
+  { name: 'BEATVN', handle: 'beatvn', icon: '🔥' },
+  { name: 'Tiin.vn', handle: 'tiin.vn', icon: '📰' },
+  { name: 'VTV24', handle: 'vtv24news', icon: '📺' },
+  { name: 'Thanh Niên', handle: 'thanhnienvn', icon: '📰' },
+  { name: 'Tuổi Trẻ', handle: 'tuoitre.vn', icon: '📰' },
+  { name: 'Dân Trí', handle: 'dantri.com.vn', icon: '📰' },
+  { name: 'Vietnamnet', handle: 'vietnamnet', icon: '📰' },
+  { name: 'Kenh14', handle: 'kenh14official', icon: '🎬' },
+  { name: 'VNExpress', handle: 'vnexpress.net', icon: '📰' },
+  { name: 'Vietcetera', handle: 'vietcetera', icon: '🎙️' }
+];
+
 async function searchTrend() {
   const keyword = document.getElementById('trendKeyword').value.trim();
   if (!keyword) return showToast('Vui lòng nhập từ khóa!', 'error');
@@ -439,12 +453,14 @@ async function searchTrend() {
   btn.disabled = true;
   btnText.style.display = 'none';
   btnLoader.style.display = 'inline-flex';
-  resultsDiv.innerHTML = '<div class="trend-placeholder">Đang kết nối API và cào dữ liệu từ TikTok...<br>Vui lòng đợi 15 - 30 giây...</div>';
+  resultsDiv.innerHTML = '<div class="trend-placeholder">Đang cào dữ liệu từ các kênh tin tức lớn...<br>Ưu tiên: BEATVN, VTV24, Tiin.vn, Kenh14...<br>Vui lòng đợi 15 - 30 giây...</div>';
 
   try {
+    // Thêm tên kênh lớn vào query để ưu tiên kết quả từ kênh tin tức
+    const channelBoost = TOP_CHANNELS.slice(0, 3).map(c => c.name).join(' ');
     const payload = {
-      searchQueries: [keyword],
-      resultsPerPage: 3
+      searchQueries: [keyword, `${keyword} ${channelBoost}`],
+      resultsPerPage: 5
     };
 
     const response = await fetch(`https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`, {
@@ -454,28 +470,48 @@ async function searchTrend() {
     });
 
     if (!response.ok) throw new Error('Lỗi khi gọi API Apify');
-    const items = await response.json();
+    let items = await response.json();
 
     if (!items || items.length === 0) {
       resultsDiv.innerHTML = '<div class="trend-placeholder">Không tìm thấy video nào cho từ khóa này.</div>';
       return;
     }
 
+    // Ưu tiên video từ kênh lớn lên trước
+    const channelHandles = TOP_CHANNELS.map(c => c.handle.toLowerCase());
+    items.sort((a, b) => {
+      const aAuthor = (a.authorMeta?.name || a.author?.uniqueId || '').toLowerCase();
+      const bAuthor = (b.authorMeta?.name || b.author?.uniqueId || '').toLowerCase();
+      const aIsTop = channelHandles.some(h => aAuthor.includes(h));
+      const bIsTop = channelHandles.some(h => bAuthor.includes(h));
+      if (aIsTop && !bIsTop) return -1;
+      if (!aIsTop && bIsTop) return 1;
+      // Nếu cùng loại, ưu tiên nhiều view hơn
+      return (b.playCount || b.stats?.playCount || 0) - (a.playCount || a.stats?.playCount || 0);
+    });
+
+    // Lấy top 5 kết quả
+    items = items.slice(0, 5);
+
     resultsDiv.innerHTML = items.map((item) => {
       const text = item.text || item.desc || 'Không có mô tả';
-      const author = item.authorMeta?.name || item.author?.uniqueId || item.author?.nickname || 'unknown';
+      const authorRaw = item.authorMeta?.name || item.author?.uniqueId || item.author?.nickname || 'unknown';
       const playCount = formatNumber(item.playCount || item.stats?.playCount || item.viewCount || 0);
       const diggCount = formatNumber(item.diggCount || item.stats?.diggCount || item.likeCount || 0);
       const videoUrl = item.webVideoUrl || item.videoUrl || item.url || '#';
       const coverUrl = item.covers?.default || item.coverUrl || item.video?.cover || item.coverWebp || '';
 
+      // Kiểm tra có phải kênh lớn không
+      const isTopChannel = channelHandles.some(h => authorRaw.toLowerCase().includes(h));
+      const channelBadge = isTopChannel ? '<span class="top-channel-badge">⭐ Kênh lớn</span>' : '';
+
       const escapedText = text.replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/\n/g, " ");
 
       return `
-        <div class="trend-item">
+        <div class="trend-item ${isTopChannel ? 'trend-item-top' : ''}">
           ${coverUrl ? `<img class="trend-item-thumb" src="${coverUrl}" alt="cover">` : ''}
           <div class="trend-item-info">
-            <div class="trend-item-author">@${author}</div>
+            <div class="trend-item-author">@${authorRaw} ${channelBadge}</div>
             <div class="trend-item-desc">${text.substring(0, 150)}${text.length > 150 ? '...' : ''}</div>
             <div class="trend-item-stats">
               <span>👀 ${playCount} view</span>
@@ -522,13 +558,22 @@ function setTrendKeyword(keyword) {
 }
 
 // ===== RENDER RANDOM TREND SUGGESTIONS =====
+// Từ khóa dựa trên các chủ đề hot từ BEATVN, VTV24, Tiin.vn, Kenh14...
 const TREND_TOPICS = [
-  "IT nghỉ việc làm shipper", "Khởi nghiệp thất bại", "Review Gen Z đi làm", "Cú sốc đầu đời", "Làm freelancer",
-  "Drama công sở", "Sếp hãm", "Quiet quitting", "Chữa lành", "Bỏ phố về quê",
-  "Ngáo giá", "Phông bạt", "Flex tài sản", "Kinh tế khó khăn 2024", "Cắt giảm nhân sự",
-  "Nghề AI thay thế", "Mất việc tuổi 30", "Gia đình ép cưới", "Mẹ bỉm sữa khởi nghiệp", "Lùa gà khóa học",
-  "Review quán cà phê dở", "Làm giàu không khó", "Mua nhà trước 30", "Gen Z mua đất", "Kiếp làm thuê",
-  "Thao túng tâm lý", "Mối quan hệ độc hại", "Cách từ chối sếp", "Đồng nghiệp 2 mặt", "Freelancer đói việc"
+  // Drama & Scandal
+  "Drama nghệ sĩ", "Scandal showbiz", "Phốt KOL", "Influencer lùa gà", "Nghệ sĩ vạ miệng",
+  // Tin tức nóng
+  "Tin nóng hôm nay", "Vụ án chấn động", "Tai nạn giao thông", "Lừa đảo mạng", "Tin giả fact check",
+  // Xã hội viral
+  "Gen Z đi làm", "Lương không đủ sống", "Giá nhà tăng", "Cắt giảm nhân sự 2024", "Thất nghiệp sau đại học",
+  // Trend giới trẻ
+  "Quiet quitting", "Chữa lành", "Phông bạt", "Sống ảo", "Flex tài sản",
+  // Công nghệ & AI
+  "AI thay thế con người", "ChatGPT Việt Nam", "Deepfake lừa đảo", "Robot AI", "Xu hướng công nghệ",
+  // Kinh tế - Đời sống
+  "Kinh tế khó khăn", "Khởi nghiệp thất bại", "Bỏ phố về quê", "Mua nhà trước 30", "Freelancer Việt Nam",
+  // Hot trend từ BEATVN/Tiin
+  "Clip triệu view", "Video viral hôm nay", "Câu chuyện cảm động", "Review đồ ăn hot", "Check in quán mới"
 ];
 
 function renderTrendSuggestions() {
@@ -540,8 +585,9 @@ function renderTrendSuggestions() {
   const selected = shuffled.slice(0, 5);
 
   container.innerHTML = `
-    <span class="trend-hint">Gợi ý từ khóa:</span>
+    <span class="trend-hint">🔥 Gợi ý từ BEATVN, VTV24, Kenh14:</span>
     ${selected.map(topic => `<button class="trend-tag" onclick="setTrendKeyword('${topic}')">${topic}</button>`).join('')}
     <button class="trend-tag" style="background:none; border:none; color:var(--orange-dark); padding:4px;" onclick="renderTrendSuggestions()" title="Đổi gợi ý khác">🔄 Thêm gợi ý</button>
   `;
 }
+
