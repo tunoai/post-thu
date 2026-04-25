@@ -905,7 +905,8 @@ Trả lời theo ĐÚNG format JSON (không markdown, không \`\`\`json):
 Yêu cầu:
 - Tiếng Việt, mỗi gợi ý khác biệt rõ ràng
 - Ưu tiên góc nhìn NGOÀI KIA CHƯA NÓI TỚI
-- Câu hỏi gợi mở, kích thích tư duy, giọng sắc sảo`;
+- Câu hỏi gợi mở, kích thích tư duy, giọng sắc sảo
+- LƯU Ý KỸ THUẬT QUAN TRỌNG: TUYỆT ĐỐI KHÔNG sử dụng dấu ngoặc kép (") ở bên trong nội dung các câu trả lời. Nếu cần trích dẫn, hãy dùng dấu ngoặc đơn ('). Mã JSON phải hoàn toàn hợp lệ.`;
 
   let requestBody;
 
@@ -961,11 +962,35 @@ Yêu cầu:
     if (jsonStr.startsWith('```')) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
     }
+    // Clean up potentially unescaped control characters
+    jsonStr = jsonStr.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+    
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error('JSON parse error:', e, '\nRaw Text:', rawText);
-    showToast('Lỗi parse JSON AI: ' + e.message, 'error');
-    throw new Error('Không đọc được kết quả AI (JSON Parse Error).');
+    
+    // Fallback: Use Regex to extract values
+    try {
+      const summaryMatch = rawText.match(/"summary"\s*:\s*"([^]*?)"\s*(?:,|})/);
+      const viewpointMatch = rawText.match(/"viewpoint"\s*:\s*"([^]*?)"\s*(?:,|})/);
+      
+      if (summaryMatch || viewpointMatch) {
+        return {
+          summary: summaryMatch ? summaryMatch[1].replace(/\\n/g, '\n') : '',
+          viewpoint: viewpointMatch ? viewpointMatch[1].replace(/\\n/g, '\n') : '',
+          suggestions: ["Lỗi định dạng AI. Hãy thử bấm Random gợi ý khác."]
+        };
+      }
+    } catch (fallbackErr) {
+      console.error("Fallback regex extraction failed");
+    }
+
+    // Ultimate fallback object
+    return {
+      summary: "Đã có lỗi xảy ra do AI trả về định dạng chữ bị hỏng.",
+      viewpoint: "Bạn vui lòng bấm 'Phân tích nội dung' lại một lần nữa nhé.",
+      suggestions: ["Bấm thử lại nút phân tích", "Kiểm tra xem nội dung nhập vào có bị lỗi phông chữ không"]
+    };
   }
 }
 
