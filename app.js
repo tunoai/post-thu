@@ -162,7 +162,7 @@ function validateForm() {
 }
 
 // ===== GENERATE =====
-function handleGenerate() {
+async function handleGenerate() {
   const btn = document.getElementById('generateBtn');
   if (btn.disabled) return;
 
@@ -173,30 +173,104 @@ function handleGenerate() {
   const context = document.getElementById('contextInput').value.trim() || 'cuộc sống hàng ngày';
   const opinion = document.getElementById('opinionInput').value.trim();
 
-  // Simulate AI generation
-  setTimeout(() => {
-    const output = {};
-    const tabs = ['hook', 'short', 'long', 'caption', 'variant'];
-    tabs.forEach(tab => {
-      const templates = generatedTemplates[tab];
-      const template = templates[Math.floor(Math.random() * templates.length)];
-      output[tab] = template
-        .replace(/\{topic\}/g, topic)
-        .replace(/\{context\}/g, context)
-        .replace(/\{opinion\}/g, opinion);
-    });
-
-    state.generatedOutput = output;
-    renderOutput();
-    generateImagePrompt();
-
+  try {
+    const output = await callGeminiGeneration(topic, context, opinion, state.selectedType, state.selectedTone, state.selectedStyle);
+    
+    if (output) {
+      state.generatedOutput = {
+        hook: output.hook || '',
+        short: output.short || '',
+        long: output.long || '',
+        caption: output.caption || '',
+        variant: output.variant || ''
+      };
+      renderOutput();
+      generateImagePrompt();
+      
+      showToast('Bài viết đã được tạo thành công! ✨', 'success');
+      document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } catch (error) {
+    console.error('Generation error:', error);
+    showToast('Lỗi khi tạo bài viết! Vui lòng thử lại.', 'error');
+  } finally {
     btn.classList.remove('loading');
     validateForm();
-    showToast('Bài viết đã được tạo thành công! ✨', 'success');
+  }
+}
 
-    // Scroll to output
-    document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 2500);
+async function callGeminiGeneration(topic, context, opinion, type, tone, styleId) {
+  const style = writingStyles.find(s => s.id === styleId);
+  const toneMap = {
+    'light': 'Nhẹ nhàng, châm chọc nhẹ',
+    'medium': 'Châm chọc vừa phải, nói thẳng sự thật',
+    'heavy': 'Gắt, đả kích mạnh mẽ, nói thẳng không nể nang'
+  };
+  
+  let sampleText = '';
+  if (style && style.samples) {
+    // Lấy tối đa 4 bài mẫu để AI học văn phong
+    sampleText = style.samples.slice(0, 4).map(s => `--- MẪU BÀI VIẾT ---\n${s.content}`).join('\n\n');
+  }
+
+  const systemPrompt = `Bạn là một AI đóng vai tác giả chuyên viết bài mạng xã hội.
+Nhiệm vụ QUAN TRỌNG NHẤT: Bạn CẦN PHẢI học thuộc và BẮT CHƯỚC Y HỆT văn phong (cách dùng từ, cách ngắt câu, độ dài câu, thái độ, tư duy) của các bài viết mẫu dưới đây.
+Đặc điểm văn phong: ${style ? style.description + ' | Giọng điệu: ' + style.tone : ''}
+${style && style.writingTips ? 'Kinh nghiệm viết của tác giả: ' + style.writingTips : ''}
+
+${sampleText}
+
+=== YÊU CẦU CỦA NGƯỜI DÙNG ===
+Chủ đề: "${topic}"
+Bối cảnh: "${context}"
+Quan điểm chính: "${opinion}"
+Mức độ châm chọc: ${toneMap[tone] || 'Vừa phải'}
+Loại bài: ${type === 'vlog' ? 'Bài Vlog (Script)' : type === 'tiktok' ? 'TikTok Vlog ngắn' : type === 'fb-short' ? 'Facebook post ngắn' : 'Facebook post dài'}
+
+=== NHIỆM VỤ ===
+Dựa vào văn phong mẫu và yêu cầu trên, viết 5 phần nội dung. 
+TRẢ LỜI BẰNG DUY NHẤT 1 CHUỖI JSON (KHÔNG bọc bằng \`\`\`json, KHÔNG có text bên ngoài):
+{
+  "hook": "3-5 câu mở đầu cực sốc/cảm xúc để kéo người đọc vào. Dùng đúng văn phong mẫu.",
+  "short": "Phiên bản ngắn gọn (khoảng 100-200 chữ). Đi thẳng vào vấn đề, kết thúc ấn tượng.",
+  "long": "Phiên bản dài chi tiết, dẫn dắt câu chuyện bối cảnh. Trình bày quan điểm sâu sắc.",
+  "caption": "Caption ngắn (3-4 dòng) để đăng kèm ảnh/video. Kèm hashtag phù hợp.",
+  "variant": "3 biến thể khác nhau về cách tiếp cận chủ đề (vd: giọng hài hước, giọng triết lý, giọng kể chuyện)."
+}`;
+
+  const requestBody = {
+    contents: [{ parts: [{ text: systemPrompt }] }],
+    generationConfig: { temperature: 0.9, maxOutputTokens: 2048 }
+  };
+
+  const response = await fetch(GEMINI_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) throw new Error('Gemini API error');
+
+  const data = await response.json();
+  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  
+  try {
+    let jsonStr = rawText.trim();
+    if (jsonStr.startsWith('\`\`\`')) {
+      jsonStr = jsonStr.replace(/\`\`\`json?\n?/g, '').replace(/\`\`\`\s*$/g, '').trim();
+    }
+    jsonStr = jsonStr.replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, '\\n');
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    try {
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        let fixed = jsonMatch[0].replace(/"([^"]*?)"/g, match => match.replace(/\n/g, '\\n').replace(/\r/g, '\\r'));
+        return JSON.parse(fixed);
+      }
+    } catch (err) {}
+    throw e;
+  }
 }
 
 // ===== IMAGE PROMPT GENERATOR =====
