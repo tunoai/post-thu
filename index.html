@@ -25,6 +25,7 @@
       <a href="#output">Lưu trữ</a>
     </nav>
     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
+    <button class="btn-action" style="margin-right: 12px; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer;" onclick="openSettingsModal()" title="Cài đặt">⚙️ API Key</button>
     <a href="#input" class="btn-cta">✍️ Viết ngay</a>
   </header>
 
@@ -349,6 +350,24 @@
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModalOverlay" onclick="closeSettingsModal(event)">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>⚙️ Cài đặt hệ thống</h3>
+        <button class="modal-close" onclick="closeSettingsModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Gemini API Key <span class="required">*</span></label>
+          <input type="password" class="form-input" id="apiKeyInput" placeholder="Nhập API Key của bạn (bắt đầu bằng AIzaSy...)">
+          <p class="form-hint" style="margin-top: 8px;">Key được lưu trên bộ nhớ trình duyệt của bạn (Local Storage) để bảo mật. Không được lưu trên máy chủ.<br><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary);">👉 Bấm vào đây để tạo API Key miễn phí</a>.</p>
+        </div>
+        <button class="btn-primary" style="width: 100%; margin-top: 16px; display: flex; justify-content: center;" onclick="saveApiKey()">💾 Lưu cài đặt</button>
+      </div>
     </div>
   </div>
 

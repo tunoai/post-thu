@@ -243,7 +243,11 @@ TRẢ LỜI BẰNG DUY NHẤT 1 CHUỖI JSON (KHÔNG bọc bằng \`\`\`json, KH
     generationConfig: { temperature: 0.9, maxOutputTokens: 2048 }
   };
 
-  const response = await fetch(GEMINI_API_URL, {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) throw new Error('No API Key');
+
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody)
@@ -667,8 +671,7 @@ function renderTrendSuggestions() {
 
 
 // ===== REFERENCE ANALYSIS FEATURE =====
-const GEMINI_API_KEY = 'AIzaSyCNsZ6zEDzIMp39VAGj_-atosnmyzprtSM';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// API key is now dynamically loaded from LocalStorage via getGeminiApiKey()
 
 // State for reference analysis
 let refState = {
@@ -826,7 +829,11 @@ async function analyzeReference() {
     }
   } catch (error) {
     console.error('Analysis error:', error);
-    showToast('Lỗi khi phân tích! Vui lòng thử lại.', 'error');
+    if (error.message.includes('API key')) {
+      showToast('Lỗi API Key: ' + error.message, 'error');
+    } else {
+      showToast('Lỗi khi phân tích! Vui lòng thử lại.', 'error');
+    }
   } finally {
     btn.classList.remove('loading');
   }
@@ -921,7 +928,11 @@ Yêu cầu:
     };
   }
 
-  const response = await fetch(GEMINI_API_URL, {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return null;
+
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody)
@@ -930,6 +941,14 @@ Yêu cầu:
   if (!response.ok) {
     const errText = await response.text();
     console.error('Gemini API error:', errText);
+    try {
+      const errJson = JSON.parse(errText);
+      if (errJson.error && errJson.error.message) {
+        throw new Error('API key lỗi: ' + errJson.error.message);
+      }
+    } catch (e) {
+      // ignore JSON parse error
+    }
     throw new Error('Gemini API error');
   }
 
@@ -1080,3 +1099,40 @@ resetForm = function() {
   const firstInput = document.getElementById('refInput-image');
   if (firstInput) firstInput.classList.add('active');
 };
+// ===== API KEY SETTINGS =====
+function getGeminiApiKey() {
+  const key = localStorage.getItem('postthu_gemini_api_key');
+  if (!key) {
+    showToast('Vui lòng cài đặt API Key trước khi sử dụng!', 'error');
+    openSettingsModal();
+    return null;
+  }
+  return key;
+}
+
+function openSettingsModal() {
+  document.getElementById('settingsModalOverlay').classList.add('active');
+  const key = localStorage.getItem('postthu_gemini_api_key');
+  if (key) {
+    document.getElementById('apiKeyInput').value = key;
+  }
+}
+
+function closeSettingsModal(event) {
+  if (event && event.target !== event.currentTarget && !event.target.classList.contains('modal-close')) return;
+  document.getElementById('settingsModalOverlay').classList.remove('active');
+}
+
+function saveApiKey() {
+  const input = document.getElementById('apiKeyInput').value.trim();
+  if (!input) {
+    showToast('Vui lòng nhập API Key', 'error');
+    return;
+  }
+  if (!input.startsWith('AIza')) {
+    showToast('API Key thường bắt đầu bằng "AIza...", vui lòng kiểm tra lại!', 'error');
+  }
+  localStorage.setItem('postthu_gemini_api_key', input);
+  showToast('Đã lưu API Key thành công!', 'success');
+  closeSettingsModal();
+}
