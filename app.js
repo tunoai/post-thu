@@ -917,14 +917,14 @@ Yêu cầu:
           { inlineData: { mimeType: refState.imageMimeType, data: refState.imageBase64 } }
         ]
       }],
-      generationConfig: { temperature: isRandom ? 1.2 : 0.9, maxOutputTokens: 2048, responseMimeType: "application/json" }
+      generationConfig: { temperature: isRandom ? 1.2 : 0.9, maxOutputTokens: 2048 }
     };
   } else {
     requestBody = {
       contents: [{
         parts: [{ text: systemPrompt + `\n\nNỘI DUNG THAM KHẢO:\n"""\n${textContent}\n"""` }]
       }],
-      generationConfig: { temperature: isRandom ? 1.2 : 0.9, maxOutputTokens: 2048, responseMimeType: "application/json" }
+      generationConfig: { temperature: isRandom ? 1.2 : 0.9, maxOutputTokens: 2048 }
     };
   }
 
