@@ -905,8 +905,7 @@ Trả lời theo ĐÚNG format JSON (không markdown, không \`\`\`json):
 Yêu cầu:
 - Tiếng Việt, mỗi gợi ý khác biệt rõ ràng
 - Ưu tiên góc nhìn NGOÀI KIA CHƯA NÓI TỚI
-- Câu hỏi gợi mở, kích thích tư duy, giọng sắc sảo
-- LƯU Ý KỸ THUẬT QUAN TRỌNG: TUYỆT ĐỐI KHÔNG sử dụng dấu ngoặc kép (") ở bên trong nội dung các câu trả lời. Nếu cần trích dẫn, hãy dùng dấu ngoặc đơn ('). Mã JSON phải hoàn toàn hợp lệ.`;
+- Câu hỏi gợi mở, kích thích tư duy, giọng sắc sảo`;
 
   let requestBody;
 
@@ -985,9 +984,9 @@ Yêu cầu:
 
     // Ultimate fallback object
     return {
-      summary: "Đã có lỗi xảy ra do AI trả về định dạng chữ bị hỏng.",
-      viewpoint: "Bạn vui lòng bấm 'Phân tích nội dung' lại một lần nữa nhé.",
-      suggestions: ["Bấm thử lại nút phân tích", "Kiểm tra xem nội dung nhập vào có bị lỗi phông chữ không"]
+      summary: "RAW TEXT FROM AI: " + rawText,
+      viewpoint: "ERROR: " + e.message,
+      suggestions: ["Vui lòng chụp ảnh màn hình này gửi cho tôi!"]
     };
   }
 }
