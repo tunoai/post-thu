@@ -962,9 +962,7 @@ Yêu cầu:
     if (jsonStr.startsWith('```')) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
     }
-    // Clean up potentially unescaped control characters
-    jsonStr = jsonStr.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
-    
+    // Just parse the string directly, responseMimeType guarantees valid JSON
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error('JSON parse error:', e, '\nRaw Text:', rawText);
