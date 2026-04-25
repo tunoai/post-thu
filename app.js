@@ -832,7 +832,7 @@ async function analyzeReference() {
     if (error.message.includes('API key')) {
       showToast('Lỗi API Key: ' + error.message, 'error');
     } else {
-      showToast('Lỗi khi phân tích! Vui lòng thử lại.', 'error');
+      showToast('Lỗi: ' + error.message, 'error');
     }
   } finally {
     btn.classList.remove('loading');
@@ -941,15 +941,16 @@ Yêu cầu:
   if (!response.ok) {
     const errText = await response.text();
     console.error('Gemini API error:', errText);
+    let errorMsg = 'Gemini API error';
     try {
       const errJson = JSON.parse(errText);
       if (errJson.error && errJson.error.message) {
-        throw new Error('API key lỗi: ' + errJson.error.message);
+        errorMsg = 'API key lỗi: ' + errJson.error.message;
       }
     } catch (e) {
       // ignore JSON parse error
     }
-    throw new Error('Gemini API error');
+    throw new Error(errorMsg);
   }
 
   const data = await response.json();
@@ -976,10 +977,10 @@ Yêu cầu:
         return JSON.parse(fixed);
       }
     } catch (e2) {
-      console.error('Fallback parse failed');
+      console.error('Fallback parse failed', e2);
     }
-    showToast('Lỗi đọc kết quả AI. Thử lại nhé!', 'error');
-    return null;
+    showToast('Lỗi parse JSON AI: ' + e.message, 'error');
+    throw new Error('Không đọc được kết quả AI (JSON Parse Error).');
   }
 }
 
