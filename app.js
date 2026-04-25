@@ -959,26 +959,11 @@ Yêu cầu:
   try {
     let jsonStr = rawText.trim();
     if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```\s*$/g, '').trim();
+      jsonStr = jsonStr.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
     }
-    // Fix unescaped newlines inside JSON string values
-    jsonStr = jsonStr.replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, '\\n');
     return JSON.parse(jsonStr);
   } catch (e) {
-    console.error('JSON parse error:', e, 'Raw:', rawText);
-    try {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        // Aggressive fix: replace all newlines inside string values
-        let fixed = jsonMatch[0];
-        fixed = fixed.replace(/"([^"]*?)"/g, (match) => {
-          return match.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-        });
-        return JSON.parse(fixed);
-      }
-    } catch (e2) {
-      console.error('Fallback parse failed', e2);
-    }
+    console.error('JSON parse error:', e, '\nRaw Text:', rawText);
     showToast('Lỗi parse JSON AI: ' + e.message, 'error');
     throw new Error('Không đọc được kết quả AI (JSON Parse Error).');
   }
