@@ -591,3 +591,418 @@ function renderTrendSuggestions() {
   `;
 }
 
+
+// ===== REFERENCE ANALYSIS FEATURE =====
+const GEMINI_API_KEY = 'AIzaSyCNsZ6zEDzIMp39VAGj_-atosnmyzprtSM';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// State for reference analysis
+let refState = {
+  activeTab: 'image',
+  imageBase64: null,
+  imageMimeType: null,
+  analysisResult: null,
+  suggestions: [],
+  selectedSuggestionIndex: null,
+  originalContent: '',
+  randomCount: 0
+};
+
+// ===== TOGGLE PANEL =====
+function toggleRefPanel() {
+  const panel = document.getElementById('refPanel');
+  const icon = document.getElementById('refToggleIcon');
+  panel.classList.toggle('open');
+  icon.classList.toggle('open');
+}
+
+// ===== REF TAB SWITCHING =====
+function switchRefTab(el) {
+  document.querySelectorAll('.ref-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  refState.activeTab = el.dataset.refTab;
+
+  document.querySelectorAll('.ref-input').forEach(i => i.classList.remove('active'));
+  const target = document.getElementById(`refInput-${refState.activeTab}`);
+  if (target) target.classList.add('active');
+}
+
+// ===== IMAGE HANDLING =====
+function handleRefImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 5MB.', 'error');
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    showToast('Vui lòng chọn file ảnh!', 'error');
+    return;
+  }
+
+  refState.imageMimeType = file.type;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64Full = e.target.result;
+    refState.imageBase64 = base64Full.split(',')[1];
+
+    document.getElementById('refUploadContent').style.display = 'none';
+    const preview = document.getElementById('refImagePreview');
+    preview.style.display = 'block';
+    document.getElementById('refPreviewImg').src = base64Full;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeRefImage() {
+  refState.imageBase64 = null;
+  refState.imageMimeType = null;
+  const imgInput = document.getElementById('refImageInput');
+  if (imgInput) imgInput.value = '';
+  const uploadContent = document.getElementById('refUploadContent');
+  if (uploadContent) uploadContent.style.display = '';
+  const preview = document.getElementById('refImagePreview');
+  if (preview) preview.style.display = 'none';
+  const previewImg = document.getElementById('refPreviewImg');
+  if (previewImg) previewImg.src = '';
+}
+
+// ===== DRAG & DROP =====
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const zone = document.getElementById('refUploadZone');
+    if (!zone) return;
+
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => {
+      zone.classList.remove('drag-over');
+    });
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('refImageInput').files = dt.files;
+        handleRefImage({ target: { files: [file] } });
+      }
+    });
+  }, 100);
+});
+
+// ===== ANALYZE REFERENCE =====
+async function analyzeReference() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) {
+    showToast('Vui lòng nhập chủ đề trước khi phân tích!', 'error');
+    document.getElementById('topicInput').focus();
+    return;
+  }
+
+  let contentToAnalyze = '';
+  let hasImage = false;
+
+  if (refState.activeTab === 'image') {
+    if (!refState.imageBase64) {
+      showToast('Vui lòng upload ảnh để phân tích!', 'error');
+      return;
+    }
+    hasImage = true;
+  } else if (refState.activeTab === 'text') {
+    contentToAnalyze = document.getElementById('refTextInput').value.trim();
+    if (!contentToAnalyze) {
+      showToast('Vui lòng nhập nội dung text để phân tích!', 'error');
+      return;
+    }
+  } else if (refState.activeTab === 'tiktok') {
+    const link = document.getElementById('refTiktokInput').value.trim();
+    if (!link) {
+      showToast('Vui lòng dán link TikTok!', 'error');
+      return;
+    }
+    if (!link.includes('tiktok.com')) {
+      showToast('Link không hợp lệ! Vui lòng dán link TikTok.', 'error');
+      return;
+    }
+    contentToAnalyze = await scrapeTikTokContent(link);
+    if (!contentToAnalyze) return;
+  }
+
+  refState.originalContent = contentToAnalyze;
+
+  const btn = document.getElementById('btnAnalyze');
+  btn.classList.add('loading');
+
+  try {
+    const result = await callGeminiAnalysis(topic, contentToAnalyze, hasImage, false);
+    if (result) {
+      refState.analysisResult = result;
+      refState.suggestions = result.suggestions || [];
+      refState.selectedSuggestionIndex = null;
+      refState.randomCount = 0;
+      renderAnalysisResults(result);
+      showToast('Phân tích hoàn tất! 🎯', 'success');
+    }
+  } catch (error) {
+    console.error('Analysis error:', error);
+    showToast('Lỗi khi phân tích! Vui lòng thử lại.', 'error');
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+// ===== SCRAPE TIKTOK =====
+async function scrapeTikTokContent(url) {
+  showToast('Đang cào nội dung TikTok... ⏳', 'info');
+
+  try {
+    const payload = { postURLs: [url], resultsPerPage: 1 };
+
+    const response = await fetch(`https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error('API error');
+    const items = await response.json();
+
+    if (!items || items.length === 0) {
+      showToast('Không tìm thấy nội dung từ link này!', 'error');
+      return null;
+    }
+
+    const item = items[0];
+    const caption = item.text || item.desc || '';
+    const author = item.authorMeta?.name || item.author?.uniqueId || 'unknown';
+    const comments = (item.comments || []).slice(0, 10).map(c => c.text || '').filter(Boolean);
+
+    let content = `[TikTok Video bởi @${author}]\n\nCaption: ${caption}`;
+    if (comments.length > 0) {
+      content += `\n\nTop comments:\n${comments.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
+    }
+
+    showToast('Đã cào xong nội dung TikTok! ✅', 'success');
+    return content;
+  } catch (error) {
+    console.error('TikTok scrape error:', error);
+    showToast('Lỗi khi cào TikTok! Thử lại sau.', 'error');
+    return null;
+  }
+}
+
+// ===== CALL GEMINI API =====
+async function callGeminiAnalysis(topic, textContent, hasImage, isRandom) {
+  const randomInstruction = isRandom
+    ? `\n\nLƯU Ý QUAN TRỌNG: Đây là lần random thứ ${refState.randomCount}. Hãy đưa ra các góc nhìn HOÀN TOÀN KHÁC với những gợi ý trước đó. Sáng tạo hơn, bất ngờ hơn, đào sâu hơn. Tránh lặp lại.`
+    : '';
+
+  const systemPrompt = `Bạn là một chuyên gia phân tích nội dung và tư duy phản biện. Nhiệm vụ: phân tích nội dung tham khảo, gợi ý góc nhìn độc đáo mà nội dung gốc chưa đề cập.
+
+CHỦ ĐỀ người dùng đang viết: "${topic}"
+
+Trả lời theo ĐÚNG format JSON (không markdown, không \`\`\`json):
+{
+  "summary": "Tóm tắt ngắn gọn 2-3 câu nội dung tham khảo nói về gì",
+  "viewpoint": "Phân tích quan điểm chính: Họ ủng hộ/phản đối gì? Lập luận chính? Điểm mạnh/yếu?",
+  "suggestions": [
+    "Góc nhìn 1 mà nội dung gốc chưa đề cập — ý tưởng mới, sắc sảo",
+    "Góc nhìn 2 — khía cạnh bất ngờ, đào sâu",
+    "Góc nhìn 3 — phản biện hoặc mở rộng hướng khác",
+    "Góc nhìn 4 — kết nối thực tế đời sống/xã hội VN",
+    "Góc nhìn 5 — câu hỏi gây suy nghĩ, có tính viral"
+  ]
+}${randomInstruction}
+
+Yêu cầu:
+- Tiếng Việt, mỗi gợi ý khác biệt rõ ràng
+- Ưu tiên góc nhìn NGOÀI KIA CHƯA NÓI TỚI
+- Câu hỏi gợi mở, kích thích tư duy, giọng sắc sảo`;
+
+  let requestBody;
+
+  if (hasImage && refState.imageBase64) {
+    requestBody = {
+      contents: [{
+        parts: [
+          { text: systemPrompt + '\n\nPhân tích nội dung trong hình ảnh dưới đây:' },
+          { inlineData: { mimeType: refState.imageMimeType, data: refState.imageBase64 } }
+        ]
+      }],
+      generationConfig: { temperature: isRandom ? 1.2 : 0.9, maxOutputTokens: 2048 }
+    };
+  } else {
+    requestBody = {
+      contents: [{
+        parts: [{ text: systemPrompt + `\n\nNỘI DUNG THAM KHẢO:\n"""\n${textContent}\n"""` }]
+      }],
+      generationConfig: { temperature: isRandom ? 1.2 : 0.9, maxOutputTokens: 2048 }
+    };
+  }
+
+  const response = await fetch(GEMINI_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('Gemini API error:', errText);
+    throw new Error('Gemini API error');
+  }
+
+  const data = await response.json();
+  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+  try {
+    let jsonStr = rawText.trim();
+    if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```\s*$/g, '').trim();
+    }
+    // Fix unescaped newlines inside JSON string values
+    jsonStr = jsonStr.replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, '\\n');
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.error('JSON parse error:', e, 'Raw:', rawText);
+    try {
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        // Aggressive fix: replace all newlines inside string values
+        let fixed = jsonMatch[0];
+        fixed = fixed.replace(/"([^"]*?)"/g, (match) => {
+          return match.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+        });
+        return JSON.parse(fixed);
+      }
+    } catch (e2) {
+      console.error('Fallback parse failed');
+    }
+    showToast('Lỗi đọc kết quả AI. Thử lại nhé!', 'error');
+    return null;
+  }
+}
+
+// ===== RENDER RESULTS =====
+function renderAnalysisResults(result) {
+  document.getElementById('refSummary').textContent = result.summary || '';
+  document.getElementById('refViewpoint').textContent = result.viewpoint || '';
+  renderSuggestions(result.suggestions || []);
+
+  const resultsDiv = document.getElementById('refResults');
+  resultsDiv.classList.add('show');
+  document.getElementById('btnUseSuggestion').disabled = true;
+  refState.selectedSuggestionIndex = null;
+}
+
+function renderSuggestions(suggestions) {
+  const container = document.getElementById('refSuggestions');
+  refState.suggestions = suggestions;
+  refState.selectedSuggestionIndex = null;
+
+  container.innerHTML = suggestions.map((s, i) => `
+    <button class="ref-suggestion-chip" data-index="${i + 1}" onclick="selectSuggestion(${i})">
+      <span class="ref-suggestion-text">${s}</span>
+    </button>
+  `).join('');
+}
+
+// ===== SELECT SUGGESTION =====
+function selectSuggestion(index) {
+  document.querySelectorAll('.ref-suggestion-chip').forEach(c => c.classList.remove('selected'));
+  const chips = document.querySelectorAll('.ref-suggestion-chip');
+  if (chips[index]) chips[index].classList.add('selected');
+
+  refState.selectedSuggestionIndex = index;
+  document.getElementById('btnUseSuggestion').disabled = false;
+}
+
+// ===== USE SUGGESTION =====
+function useSuggestion() {
+  if (refState.selectedSuggestionIndex === null) return;
+  const suggestion = refState.suggestions[refState.selectedSuggestionIndex];
+  if (!suggestion) return;
+
+  const opinionInput = document.getElementById('opinionInput');
+  const current = opinionInput.value.trim();
+  opinionInput.value = current ? current + '\n\n' + suggestion : suggestion;
+
+  validateForm();
+  showToast('Đã thêm gợi ý vào "Quan điểm chính"! ✅', 'success');
+  opinionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  opinionInput.focus();
+}
+
+// ===== RANDOM SUGGESTIONS =====
+async function randomSuggestions() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) {
+    showToast('Vui lòng nhập chủ đề!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnRandom');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  setTimeout(() => btn.classList.remove('spinning'), 500);
+
+  refState.randomCount++;
+
+  try {
+    const hasImage = refState.activeTab === 'image' && !!refState.imageBase64;
+    const content = refState.originalContent;
+
+    const result = await callGeminiAnalysis(topic, content, hasImage, true);
+    if (result && result.suggestions) {
+      refState.suggestions = result.suggestions;
+      refState.selectedSuggestionIndex = null;
+      renderSuggestions(result.suggestions);
+      document.getElementById('btnUseSuggestion').disabled = true;
+      showToast('Đã random gợi ý mới! 🎲', 'success');
+    }
+  } catch (error) {
+    console.error('Random error:', error);
+    showToast('Lỗi khi tạo gợi ý mới!', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ===== EXTEND RESET FORM =====
+const _originalResetForm = resetForm;
+resetForm = function() {
+  _originalResetForm();
+
+  refState = {
+    activeTab: 'image', imageBase64: null, imageMimeType: null,
+    analysisResult: null, suggestions: [], selectedSuggestionIndex: null,
+    originalContent: '', randomCount: 0
+  };
+
+  removeRefImage();
+  const refText = document.getElementById('refTextInput');
+  if (refText) refText.value = '';
+  const refTiktok = document.getElementById('refTiktokInput');
+  if (refTiktok) refTiktok.value = '';
+  const refResults = document.getElementById('refResults');
+  if (refResults) refResults.classList.remove('show');
+
+  const panel = document.getElementById('refPanel');
+  if (panel) panel.classList.remove('open');
+  const icon = document.getElementById('refToggleIcon');
+  if (icon) icon.classList.remove('open');
+
+  document.querySelectorAll('.ref-tab').forEach(t => t.classList.remove('active'));
+  const firstTab = document.querySelector('.ref-tab[data-ref-tab="image"]');
+  if (firstTab) firstTab.classList.add('active');
+  document.querySelectorAll('.ref-input').forEach(i => i.classList.remove('active'));
+  const firstInput = document.getElementById('refInput-image');
+  if (firstInput) firstInput.classList.add('active');
+};

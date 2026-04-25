@@ -88,6 +88,91 @@
           <label>Bối cảnh</label>
           <textarea class="form-textarea" id="contextInput" placeholder="Mô tả tình huống, câu chuyện, hoặc góc nhìn cụ thể..."></textarea>
         </div>
+        <!-- Reference Analysis Panel -->
+        <div class="form-group">
+          <button class="ref-toggle" id="refToggleBtn" onclick="toggleRefPanel()">
+            <span class="ref-toggle-text">🔍 Thêm nội dung tham khảo</span>
+            <span class="ref-toggle-hint">Phân tích quan điểm bên ngoài, tìm góc nhìn mới</span>
+            <span class="ref-toggle-icon" id="refToggleIcon">▼</span>
+          </button>
+          <div class="ref-panel" id="refPanel">
+            <div class="ref-tabs">
+              <button class="ref-tab active" data-ref-tab="image" onclick="switchRefTab(this)">🖼️ Hình ảnh</button>
+              <button class="ref-tab" data-ref-tab="text" onclick="switchRefTab(this)">📝 Text</button>
+              <button class="ref-tab" data-ref-tab="tiktok" onclick="switchRefTab(this)">🔗 TikTok</button>
+            </div>
+
+            <!-- Image Tab -->
+            <div class="ref-input active" id="refInput-image">
+              <div class="ref-upload" id="refUploadZone" onclick="document.getElementById('refImageInput').click()">
+                <input type="file" id="refImageInput" accept="image/*" hidden onchange="handleRefImage(event)">
+                <div class="ref-upload-content" id="refUploadContent">
+                  <div class="ref-upload-icon">📎</div>
+                  <div class="ref-upload-text">Click hoặc kéo thả ảnh vào đây</div>
+                  <div class="ref-upload-hint">Screenshot bài viết, comment, ảnh nội dung...</div>
+                </div>
+                <div class="ref-upload-preview" id="refImagePreview" style="display:none;">
+                  <img id="refPreviewImg" src="" alt="preview">
+                  <button class="ref-remove-img" onclick="event.stopPropagation(); removeRefImage()">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Tab -->
+            <div class="ref-input" id="refInput-text">
+              <textarea class="form-textarea" id="refTextInput" rows="5" placeholder="Paste nội dung bài viết, bình luận, caption... của người khác vào đây. Ví dụ: copy nguyên bài viết Facebook, comment tranh luận, quote từ báo..."></textarea>
+            </div>
+
+            <!-- TikTok Tab -->
+            <div class="ref-input" id="refInput-tiktok">
+              <div class="ref-tiktok-wrapper">
+                <input type="text" class="form-input" id="refTiktokInput" placeholder="Dán link TikTok (VD: https://www.tiktok.com/@user/video/123...)">
+                <p class="ref-tiktok-hint">Hệ thống sẽ cào caption + top comments từ video</p>
+              </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button class="btn-analyze" id="btnAnalyze" onclick="analyzeReference()">
+              <span class="btn-text">🤖 Phân tích nội dung</span>
+              <span class="btn-loader"><span class="spinner"></span> Đang phân tích...</span>
+            </button>
+
+            <!-- Results Area -->
+            <div class="ref-results" id="refResults">
+              <!-- Summary -->
+              <div class="ref-result-section">
+                <div class="ref-result-header">
+                  <span class="ref-result-icon">📋</span>
+                  <h4>Tóm tắt nội dung</h4>
+                </div>
+                <div class="ref-result-text" id="refSummary"></div>
+              </div>
+              <!-- Viewpoint -->
+              <div class="ref-result-section">
+                <div class="ref-result-header">
+                  <span class="ref-result-icon">🎯</span>
+                  <h4>Quan điểm của họ</h4>
+                </div>
+                <div class="ref-result-text" id="refViewpoint"></div>
+              </div>
+              <!-- Suggestions -->
+              <div class="ref-result-section ref-suggestions-section">
+                <div class="ref-result-header">
+                  <span class="ref-result-icon">💡</span>
+                  <h4>Gợi ý góc nhìn mới cho bạn</h4>
+                </div>
+                <div class="ref-suggestions" id="refSuggestions"></div>
+                <div class="ref-suggestion-actions">
+                  <button class="btn-random" id="btnRandom" onclick="randomSuggestions()">
+                    <span class="btn-random-icon">🎲</span> Random gợi ý khác
+                  </button>
+                  <button class="btn-use-suggestion" id="btnUseSuggestion" disabled onclick="useSuggestion()">✅ Dùng gợi ý này</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Quan điểm chính <span class="required">*</span></label>
           <textarea class="form-textarea" id="opinionInput" rows="3" placeholder="Bạn muốn nói gì? Góc nhìn chính của bạn là gì?"></textarea>
